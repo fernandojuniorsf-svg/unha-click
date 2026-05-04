@@ -203,7 +203,7 @@ def tela_cadastro():
                 st.warning("Preencha os campos obrigatorios (*)")
 
 def tela_cliente_home():
-    primeiro_nome = st.session_state.user_nome.split()
+    primeiro_nome = st.session_state.user_nome.split()[0]
     st.markdown('<div class="header-unha"><h1>Ola, ' + primeiro_nome + '!</h1><p>O que vamos fazer hoje?</p></div>', unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -440,7 +440,7 @@ def tela_perfil():
 
 def tela_manicure_home():
     hoje = date.today().strftime("%d/%m/%Y")
-    primeiro_nome = st.session_state.user_nome.split()
+    primeiro_nome = st.session_state.user_nome.split()[0]
     st.markdown('<div class="header-unha"><h1>Ola, ' + primeiro_nome + '!</h1><p>Painel da Profissional</p></div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
