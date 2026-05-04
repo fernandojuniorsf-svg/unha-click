@@ -4,8 +4,11 @@ from psycopg2.extras import RealDictCursor
 import hashlib
 from datetime import datetime, date, timedelta
 
-HASH_ADMIN = hashlib.sha256("admin123".encode()).hexdigest()
-HASH_DEMO = hashlib.sha256(str(1234).encode()).hexdigest()
+def gerar_hash(texto):
+    return hashlib.sha256(texto.encode()).hexdigest()
+
+HASH_ADMIN = gerar_hash("admin123")
+HASH_DEMO = gerar_hash(str(1234))
 
 st.set_page_config(page_title="Unha Click", page_icon="💅", layout="centered", initial_sidebar_state="collapsed")
 
@@ -143,7 +146,7 @@ def tela_login():
     with col1:
         if st.button("ENTRAR", use_container_width=True):
             if tel and senha:
-                s =[PASSWORD]6(senha.encode()).hexdigest()
+                s = gerar_hash(senha)
                 resultado = query("SELECT * FROM usuarios WHERE telefone=%s AND senha=%s AND ativo=1", (tel, s))
                 if resultado:
                     user = resultado
@@ -183,7 +186,7 @@ def tela_cadastro():
         cidade = st.text_input("Cidade")
         if st.form_submit_button("CADASTRAR"):
             if nome and tel and senha:
-                s =[PASSWORD]6(senha.encode()).hexdigest()
+                s = gerar_hash(senha)
                 existe = query("SELECT id FROM usuarios WHERE telefone=%s", (tel,))
                 if existe:
                     st.error("Telefone ja cadastrado!")
