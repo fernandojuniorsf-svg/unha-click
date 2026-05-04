@@ -74,7 +74,7 @@ def execute_returning(sql, params=None):
     except Exception as e:
         st.error(f"Erro no banco: {e}")
         return None
-
+st.session_state.pop("banco_criado", None)
 if "banco_criado" not in st.session_state:
     try:
         conn = get_new_connection()
