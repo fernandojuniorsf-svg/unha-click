@@ -257,12 +257,13 @@ def tela_escolher_manicure():
     for m in manicures:
         nome_str = str(m["nome"])
         inicial = nome_str[:1].upper()
-        st.markdown('<div class="card"><div style="display:flex; align-items:center; gap:12px;"><div style="background:#C48B9F; color:white; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700;">' + inicial + '</div><div style="flex:1;"><strong style="font-size:16px;">' + str(m["nome"]) + '</strong><br><span class="estrelas">' + estrelas(m["avaliacao_media"] or 5) + '</span> <span style="color:#888; font-size:12px;">(' + str(m["total_avaliacoes"] or 0) + ' avaliacoes)</span><br><span style="color:#888; font-size:12px;">' + str(m["endereco"] or "Atende no local") + ' | ' + str(m["total_atend"]) + ' atendimentos</span></div></div><p style="color:#555; font-style:italic; font-size:12px; margin-top:8px;">' + str(m["bio"] or "") + '</p></div>', unsafe_allow_html=True)
-        nome_partes = str(m["nome"]).split()
-        primeiro = nome_partes.pop(0) if nome_partes else str(m["nome"])
+        nome_partes = nome_str.split()
+        primeiro = nome_partes.pop(0) if nome_partes else nome_str
+        st.markdown('<div class="card"><div style="display:flex; align-items:center; gap:12px;"><div style="background:#C48B9F; color:white; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700;">' + inicial + '</div><div style="flex:1;"><strong style="font-size:16px;">' + nome_str + '</strong><br><span class="estrelas">' + estrelas(m["avaliacao_media"] or 5) + '</span> <span style="color:#888; font-size:12px;">(' + str(m["total_avaliacoes"] or 0) + ' avaliacoes)</span><br><span style="color:#888; font-size:12px;">' + str(m["endereco"] or "Atende no local") + ' | ' + str(m["total_atend"]) + ' atendimentos</span></div></div><p style="color:#555; font-style:italic; font-size:12px; margin-top:8px;">' + str(m["bio"] or "") + '</p></div>', unsafe_allow_html=True)
         if st.button("Agendar com " + primeiro, key="man_" + str(m["id"]), use_container_width=True):
             ir_para("agendar", manicure_id=m["id"])
             st.rerun()
+
 def tela_agendar():
     servico_list = query("SELECT * FROM servicos WHERE id=%s", (st.session_state.servico_id,))
     manicure_list = query("SELECT * FROM usuarios WHERE id=%s", (st.session_state.manicure_id,))
