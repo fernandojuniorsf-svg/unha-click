@@ -242,8 +242,7 @@ if "banco_criado" not in st.session_state:
 
             s_c = hashlib.sha256("1234".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
-                       ("Cliente Demo", "11977776666", "cliente@demo.com", s_c, "cliente"))
-%s,%s,%s,%s)",
+                       ("Cliente Demo", "11977776666", "cliente@demo.com", s_c, "cliente"))%s,%s,%s,%s)",
                            (mid, dia, "08:00", "18:00"))
             s_c =[PIN]sha256("1234".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
