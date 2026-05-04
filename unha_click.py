@@ -226,7 +226,7 @@ if "banco_criado" not in st.session_state:
         cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
         if cur.fetchone() == 0:
             import hashlib as _h
-            s_admin =[PIN]sha256("admin123".encode()).hexdigest()
+            s_admin = _h.sha256("admin123".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
                        ("Fernando Jr", "11999999999", "fernando@unhaclick.com", s_admin, "admin"))
             s_m =[PIN]sha256("1234".encode()).hexdigest()
