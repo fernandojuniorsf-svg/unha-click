@@ -496,7 +496,7 @@ def tela_admin():
         logout()
         st.rerun()
     stats = query("SELECT (SELECT COUNT(*) FROM usuarios WHERE tipo='cliente') as clientes, (SELECT COUNT(*) FROM usuarios WHERE tipo='manicure') as manicures, (SELECT COUNT(*) FROM agendamentos) as agendamentos, (SELECT COALESCE(SUM(valor_total),0) FROM agendamentos WHERE status='concluido') as faturamento, (SELECT COALESCE(SUM(valor_comissao),0) FROM agendamentos WHERE status='concluido') as comissao")
-    s = stats if stats else {"clientes": 0, "manicures": 0, "agendamentos": 0, "faturamento": 0, "comissao": 0}
+    s = stats[0] if stats else {"clientes": 0, "manicures": 0, "agendamentos": 0, "faturamento": 0, "comissao": 0}
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown('<div class="kpi-box"><div style="font-size:24px;">Clientes</div><div class="kpi-valor" style="color:#8B5E6B;">' + str(s["clientes"]) + '</div></div>', unsafe_allow_html=True)
