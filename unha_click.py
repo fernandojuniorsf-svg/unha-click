@@ -86,24 +86,18 @@ if "banco_criado" not in st.session_state:
                 cur.execute("INSERT INTO servicos (nome,descricao,preco,duracao_min,categoria,icone) VALUES (%s,%s,%s,%s,%s,%s)", srv)
         cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
         if cur.fetchone() == 0:
-            se[PASSWORD]sh[PIN]sha256("admin123".encode()).hexdigest()
+                    cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
+        if cur.fetchone() == 0:
+            senha_admin =[PASSWORD]6("admin123".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Fernando Jr","11999999999","fernando@unhaclick.com",senha_admin,"admin"))
-            s[PASSWORD]sh[PIN]sha256("1234".encode()).hexdigest()
+            senha_mani =[PASSWORD]6([PASSWORD]4".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo,especialidades,bio,chave_pix) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id", ("Profissional Demo","11988887777","demo@unhaclick.com",senha_mani,"manicure","Gel,Fibra,Decoracao,Francesinha","Especialista em nail art com 5 anos de experiencia!","11988887777"))
             mid = cur.fetchone()
             for dia in range(0, 6):
                 cur.execute("INSERT INTO disponibilidade (manicure_id,dia_semana,hora_inicio,hora_fim) VALUES (%s,%s,%s,%s)", (mid, dia, "08:00", "18:00"))
-            [PASSWORD]sh[PIN]sha256("1234".encode()).hexdigest()
+            senha_cli =[PASSWORD]6([PASSWORD]4".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Cliente Demo","11977776666","cliente@demo.com",senha_cli,"cliente"))
-        conn.commit()
-        cur.close()
-        conn.close()
-        st.session_state.banco_criado = True
-    except Exception as e:
-        st.error(f"Erro ao conectar no banco: {e}")
-        st.stop()
-def estrelas(nota):
-    return "⭐" * int(nota) + "☆" * (5 - int(nota))
+
 
 def badge_html(status):
     nomes = {"pendente": "Pendente", "confirmado": "Confirmado", "concluido": "Concluido", "cancelado": "Cancelado"}
