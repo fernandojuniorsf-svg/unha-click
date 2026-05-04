@@ -4,8 +4,8 @@ from psycopg2.extras import RealDictCursor
 import hashlib
 from datetime import datetime, date, timedelta
 
-HASH_ADMIN = hashlib.sha256(b"admin123").hexdigest()
-HASH_DEMO = hashlib.sha256(b[PASSWORD]4").hexdigest()
+HASH_ADMIN = hashlib.sha256("admin123".encode()).hexdigest()
+HASH_DEMO = hashlib.sha256(str(1234).encode()).hexdigest()
 
 st.set_page_config(page_title="Unha Click", page_icon="💅", layout="centered", initial_sidebar_state="collapsed")
 
