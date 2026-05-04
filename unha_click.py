@@ -155,7 +155,7 @@ def tela_login():
         h = gerar_hash(senha)
         r = query("SELECT * FROM usuarios WHERE telefone=%s AND senha=%s AND ativo=1", (tel, h))
         if r:
-            u = r
+            u = r[0]
             st.session_state.user_id = u["id"]
             st.session_state.user_nome = u["nome"]
             st.session_state.user_tipo = u["tipo"]
@@ -238,7 +238,7 @@ def tela_agendar():
     sl = query("SELECT * FROM servicos WHERE id=%s", (st.session_state.servico_id,))
     ml = query("SELECT * FROM usuarios WHERE id=%s", (st.session_state.manicure_id,))
     if not sl or not ml: st.error("Erro."); ir("cliente_home"); st.rerun(); return
-    srv = sl; man = ml
+    srv = sl[0]; man = ml[0][0][0][]
     st.markdown('<div class="header"><h1>Agendar</h1><p>' + str(srv["nome"]) + ' com ' + str(man["nome"]) + '</p></div>', unsafe_allow_html=True)
     if st.button("Voltar"): ir("escolher_manicure"); st.rerun()
     vt = srv["preco"]; dur = srv["duracao_min"]
@@ -311,7 +311,7 @@ def tela_pagamento():
     fp = st.session_state.get("forma_pg", "pix")
     rl = query("SELECT a.*, s.nome as sn, u.nome as mn FROM agendamentos a JOIN servicos s ON a.servico_id=s.id JOIN usuarios u ON a.manicure_id=u.id WHERE a.id=%s", (aid,))
     if not rl: ir("cliente_home"); st.rerun(); return
-    ag = rl
+    ag = rl[0][0]
     st.markdown('<div class="header"><h1>Pagamento</h1><p>Finalize seu agendamento</p></div>', unsafe_allow_html=True)
     st.markdown('<div class="card" style="text-align:center;"><p style="font-size:11px; color:var(--light); text-transform:uppercase; font-weight:600; letter-spacing:0.5px; margin:0;">Valor total</p><p style="font-size:36px; font-weight:800; color:var(--text); margin:8px 0;">R$ ' + f'{vt:.2f}' + '</p><p style="color:var(--muted); font-size:13px; margin:0;">' + str(ag["sn"]) + ' com ' + str(ag["mn"]) + '</p></div>', unsafe_allow_html=True)
     if fp == "pix":
@@ -343,7 +343,7 @@ def tela_confirmacao():
     aid = st.session_state.get("ultimo_ag")
     rl = query("SELECT a.*, s.nome as sn, u.nome as mn FROM agendamentos a JOIN servicos s ON a.servico_id=s.id JOIN usuarios u ON a.manicure_id=u.id WHERE a.id=%s", (aid,))
     if not rl: ir("cliente_home"); st.rerun(); return
-    ag = rl
+    ag = rl[0][0]
     st.markdown('<div style="text-align:center; padding:60px 0 20px 0;"><div style="width:64px; height:64px; background:#D1FAE5; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto;"><span style="color:#065F46; font-size:28px; font-weight:800;">\u2713</span></div><h2 style="color:var(--text); font-weight:800; margin:0;">Tudo certo!</h2><p style="color:var(--muted); font-size:14px; margin:8px 0 0 0;">Seu agendamento foi confirmado e o pagamento processado.</p></div>', unsafe_allow_html=True)
     st.markdown('<div class="card" style="border:1.5px solid var(--border);"><p style="color:var(--text); font-size:14px; margin:0; line-height:2.2;"><strong>Servi\u00e7o:</strong> ' + str(ag["sn"]) + '<br><strong>Profissional:</strong> ' + str(ag["mn"]) + '<br><strong>Data:</strong> ' + str(ag["data"]) + '<br><strong>Hor\u00e1rio:</strong> ' + str(ag["horario"]) + '<br><strong>Local:</strong> ' + str(ag["endereco_atendimento"]) + '<br><strong>Pagamento:</strong> ' + nome_pg(ag["forma_pagamento"]) + ' ' + tag_st("confirmado") + '</p><div class="sep"></div><p style="font-size:28px; font-weight:800; color:var(--text); text-align:center; margin:0;">R$ ' + f'{ag["valor_total"]:.2f}' + '</p></div>', unsafe_allow_html=True)
     if st.button("Voltar ao in\u00edcio", use_container_width=True, type="primary"):
@@ -367,7 +367,7 @@ def tela_avaliar():
     aid = st.session_state.get("avaliando_id")
     rl = query("SELECT a.*, s.nome as sn, u.nome as mn FROM agendamentos a JOIN servicos s ON a.servico_id=s.id JOIN usuarios u ON a.manicure_id=u.id WHERE a.id=%s", (aid,))
     if not rl: ir("cliente_home"); st.rerun(); return
-    ag = rl
+    ag = rl[0][0]
     st.markdown('<div class="header"><h1>Avaliar</h1><p>' + str(ag["sn"]) + ' com ' + str(ag["mn"]) + '</p></div>', unsafe_allow_html=True)
     if st.button("Voltar"): ir("meus_agendamentos"); st.rerun()
     st.markdown('<p class="stitle">Como foi sua experi\u00eancia?</p>', unsafe_allow_html=True)
@@ -386,7 +386,7 @@ def tela_avaliar():
 def tela_perfil():
     rl = query("SELECT * FROM usuarios WHERE id=%s", (st.session_state.user_id,))
     if not rl: ir("cliente_home"); st.rerun(); return
-    u = rl
+    u = rl[0]
     st.markdown('<div class="header"><h1>Meu perfil</h1></div>', unsafe_allow_html=True)
     if st.button("Voltar"): ir("cliente_home"); st.rerun()
     letra = str(u["nome"])[:1].upper()
@@ -404,9 +404,9 @@ def tela_manicure_home():
         if st.button("Sair", use_container_width=True): sair(); st.rerun()
     mes = date.today().strftime("%m/%Y")
     gr = query("SELECT COALESCE(SUM(valor_manicure),0) as g, COUNT(*) as t FROM agendamentos WHERE manicure_id=%s AND status='concluido' AND data LIKE %s", (st.session_state.user_id, "%" + mes))
-    g = gr if gr else {"g":0,"t":0}
+    g = gr[0] if gr else {"g":0,"t":0}
     rr = query("SELECT COALESCE(SUM(valor_manicure),0) as v FROM agendamentos WHERE manicure_id=%s AND status='concluido' AND pago=1 AND data_liberacao_manicure > %s", (st.session_state.user_id, hoje))
-    r = rr if rr else {"v":0}
+    r = rr[0] if rr else {"v":0}
     c1, c2 = st.columns(2)
     with c1:
         st.markdown('<div class="kpi"><div class="kpi-l">Ganhos do m\u00eas</div><div class="kpi-v" style="color:var(--green);">R$ ' + f'{g["g"]:.2f}' + '</div><div class="kpi-l">' + str(g["t"]) + ' atendimentos</div></div>', unsafe_allow_html=True)
@@ -452,7 +452,7 @@ def tela_admin():
     st.markdown('<div class="header-dark"><h1>Painel administrativo</h1><p>Unha Click</p></div>', unsafe_allow_html=True)
     if st.button("Sair"): sair(); st.rerun()
     stats = query("SELECT (SELECT COUNT(*) FROM usuarios WHERE tipo='cliente') as cli, (SELECT COUNT(*) FROM usuarios WHERE tipo='manicure') as man, (SELECT COUNT(*) FROM agendamentos) as ag, (SELECT COALESCE(SUM(valor_total),0) FROM agendamentos WHERE status='concluido') as fat, (SELECT COALESCE(SUM(valor_comissao),0) FROM agendamentos WHERE status='concluido') as com")
-    s = stats if stats else {"cli":0,"man":0,"ag":0,"fat":0,"com":0}
+    s = stats[0] if stats else {"cli":0,"man":0,"ag":0,"fat":0,"com":0}
     c1, c2 = st.columns(2)
     with c1: st.markdown('<div class="kpi"><div class="kpi-l">Clientes</div><div class="kpi-v" style="color:var(--text);">' + str(s["cli"]) + '</div></div>', unsafe_allow_html=True)
     with c2: st.markdown('<div class="kpi"><div class="kpi-l">Profissionais</div><div class="kpi-v" style="color:var(--text);">' + str(s["man"]) + '</div></div>', unsafe_allow_html=True)
