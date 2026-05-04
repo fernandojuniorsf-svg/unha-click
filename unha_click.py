@@ -238,7 +238,7 @@ def tela_agendar():
     sl = query("SELECT * FROM servicos WHERE id=%s", (st.session_state.servico_id,))
     ml = query("SELECT * FROM usuarios WHERE id=%s", (st.session_state.manicure_id,))
     if not sl or not ml: st.error("Erro."); ir("cliente_home"); st.rerun(); return
-    srv = sl[0]; man = ml[0][0][0][]
+    srv = sl[0]; man = ml[0]
     st.markdown('<div class="header"><h1>Agendar</h1><p>' + str(srv["nome"]) + ' com ' + str(man["nome"]) + '</p></div>', unsafe_allow_html=True)
     if st.button("Voltar"): ir("escolher_manicure"); st.rerun()
     vt = srv["preco"]; dur = srv["duracao_min"]
