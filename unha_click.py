@@ -225,11 +225,11 @@ if "banco_criado" not in st.session_state:
 
         cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
         if cur.fetchone() == 0:
-            import hashlib as _h
-            s_admin = _h.sha256("admin123".encode()).hexdigest()
+            s_admin = hashlib.sha256("admin123".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
                        ("Fernando Jr", "11999999999", "fernando@unhaclick.com", s_admin, "admin"))
-            s_m =[PIN]sha256("1234".encode()).hexdigest()
+
+            s_m = hashlib.sha256("1234".encode()).hexdigest()
             cur.execute("""INSERT INTO usuarios (nome,telefone,email,senha,tipo,especialidades,bio,chave_pix)
                           VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
                        ("Profissional Demo", "11988887777", "demo@unhaclick.com", s_m, "manicure",
@@ -238,6 +238,12 @@ if "banco_criado" not in st.session_state:
             mid = cur.fetchone()
             for dia in range(0, 6):
                 cur.execute("INSERT INTO disponibilidade (manicure_id,dia_semana,hora_inicio,hora_fim) VALUES (%s,%s,%s,%s)",
+                           (mid, dia, "08:00", "18:00"))
+
+            s_c = hashlib.sha256("1234".encode()).hexdigest()
+            cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
+                       ("Cliente Demo", "11977776666", "cliente@demo.com", s_c, "cliente"))
+%s,%s,%s,%s)",
                            (mid, dia, "08:00", "18:00"))
             s_c =[PIN]sha256("1234".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
