@@ -75,7 +75,8 @@ def execute_returning(sql, params=None):
         st.error(f"Erro no banco: {e}")
         return None
 st.session_state.pop("banco_criado", None)
-if "banco_criado" not in st.session_state:
+@st.cache_resource
+def inicializar_banco():
     try:
         conn = get_new_connection()
         cur = conn.cursor()
@@ -86,29 +87,32 @@ if "banco_criado" not in st.session_state:
         cur.execute("""CREATE TABLE IF NOT EXISTS notificacoes (id SERIAL PRIMARY KEY, usuario_id INTEGER, titulo TEXT, mensagem TEXT, tipo TEXT DEFAULT 'info', lida INTEGER DEFAULT 0, data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         cur.execute("""CREATE TABLE IF NOT EXISTS transacoes (id SERIAL PRIMARY KEY, agendamento_id INTEGER, tipo TEXT, valor REAL, destinatario_id INTEGER, forma_pagamento TEXT, status TEXT DEFAULT 'pendente', data_prevista_liberacao TEXT, data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         conn.commit()
-        cur.execute("SELECT COUNT(*) FROM servicos")
-        if cur.fetchone() == 0:
-            for srv in [("Esmaltacao Simples","Esmaltacao classica",35.0,40,"maos","💅"),("Esmaltacao em Gel","Gel de longa duracao",60.0,50,"maos","✨"),("Unha Decorada","Nail art personalizada",80.0,70,"maos","🎨"),("Francesinha","Classica francesinha",45.0,50,"maos","🤍"),("Alongamento Fibra","Fibra de vidro",120.0,90,"maos","💎"),("Pedicure Completa","Hidratacao + esmaltacao",50.0,60,"pes","🦶"),("Spa dos Pes","Esfoliacao + hidratacao",70.0,75,"pes","🧖"),("Combo Maos + Pes","Esmaltacao completa",75.0,90,"combo","👑"),("Combo VIP","Gel + Spa + Hidratacao",130.0,120,"combo","🌟"),("Combo Noiva","Pacote especial noivas",200.0,150,"combo","💒")]:
-                cur.execute("INSERT INTO servicos (nome,descricao,preco,duracao_min,categoria,icone) VALUES (%s,%s,%s,%s,%s,%s)", srv)
-        cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
-        if cur.fetchone() == 0:
-            senha_admin = HASH_ADMIN
-            cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Fernando Jr","11999999999","fernando@unhaclick.com",senha_admin,"admin"))
-            senha_mani = HASH_DEMO
-            cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo,especialidades,bio,chave_pix) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id", ("Profissional Demo","11988887777","demo@unhaclick.com",senha_mani,"manicure","Gel,Fibra,Decoracao,Francesinha","Especialista em nail art com 5 anos de experiencia!","11988887777"))
-            mid = cur.fetchone()
-            for dia in range(0, 6):
-                cur.execute("INSERT INTO disponibilidade (manicure_id,dia_semana,hora_inicio,hora_fim) VALUES (%s,%s,%s,%s)", (mid, dia, "08:00", "18:00"))
-            senha_cli = HASH_DEMO
-            cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Cliente Demo","11977776666","cliente@demo.com",senha_cli,"cliente"))
+        cur.execute("DELETE FROM disponibilidade")
+        cur.execute("DELETE FROM transacoes")
+        cur.execute("DELETE FROM notificacoes")
+        cur.execute("DELETE FROM agendamentos")
+        cur.execute("DELETE FROM servicos")
+        cur.execute("DELETE FROM usuarios")
+        conn.commit()
+        for srv in [("Esmaltacao Simples","Esmaltacao classica",35.0,40,"maos","💅"),("Esmaltacao em Gel","Gel de longa duracao",60.0,50,"maos","✨"),("Unha Decorada","Nail art personalizada",80.0,70,"maos","🎨"),("Francesinha","Classica francesinha",45.0,50,"maos","🤍"),("Alongamento Fibra","Fibra de vidro",120.0,90,"maos","💎"),("Pedicure Completa","Hidratacao + esmaltacao",50.0,60,"pes","🦶"),("Spa dos Pes","Esfoliacao + hidratacao",70.0,75,"pes","🧖"),("Combo Maos + Pes","Esmaltacao completa",75.0,90,"combo","👑"),("Combo VIP","Gel + Spa + Hidratacao",130.0,120,"combo","🌟"),("Combo Noiva","Pacote especial noivas",200.0,150,"combo","💒")]:
+            cur.execute("INSERT INTO servicos (nome,descricao,preco,duracao_min,categoria,icone) VALUES (%s,%s,%s,%s,%s,%s)", srv)
+        senha_admin = HASH_ADMIN
+        cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Fernando Jr","11999999999","fernando@unhaclick.com",senha_admin,"admin"))
+        senha_mani = HASH_DEMO
+        cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo,especialidades,bio,chave_pix) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id", ("Profissional Demo","11988887777","demo@unhaclick.com",senha_mani,"manicure","Gel,Fibra,Decoracao,Francesinha","Especialista em nail art com 5 anos de experiencia!","11988887777"))
+        mid = cur.fetchone()
+        for dia in range(0, 6):
+            cur.execute("INSERT INTO disponibilidade (manicure_id,dia_semana,hora_inicio,hora_fim) VALUES (%s,%s,%s,%s)", (mid, dia, "08:00", "18:00"))
+        senha_cli = HASH_DEMO
+        cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Cliente Demo","11977776666","cliente@demo.com",senha_cli,"cliente"))
         conn.commit()
         cur.close()
         conn.close()
-        st.session_state.banco_criado = True
+        return True
     except Exception as e:
-        st.error(f"Erro ao conectar no banco: {e}")
-        st.stop()
+        return False
 
+inicializar_banco()
 
 
 def badge_html(status):
