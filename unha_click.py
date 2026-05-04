@@ -90,7 +90,7 @@ if "banco_criado" not in st.session_state:
         if cur.fetchone() == 0:
             senha_admin =[PASSWORD]6("admin123".encode()).hexdigest()
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Fernando Jr","11999999999","fernando@unhaclick.com",senha_admin,"admin"))
-            senha_mani =[PASSWORD]6([PASSWORD]4".encode()).hexdigest()
+            senha_mani [PASSWORD]1a5e255f067953623c8b388b4459e13f978d7c846f4"
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo,especialidades,bio,chave_pix) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id", ("Profissional Demo","11988887777","demo@unhaclick.com",senha_mani,"manicure","Gel,Fibra,Decoracao,Francesinha","Especialista em nail art com 5 anos de experiencia!","11988887777"))
             mid = cur.fetchone()
             for dia in range(0, 6):
