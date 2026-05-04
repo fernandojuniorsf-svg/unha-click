@@ -75,7 +75,7 @@ def execute_returning(sql, params=None):
         st.error(f"Erro no banco: {e}")
         return None
 st.session_state.pop("banco_criado", None)
-if True:
+if "banco_criado" not in st.session_state:
     try:
         conn = get_new_connection()
         cur = conn.cursor()
@@ -86,14 +86,6 @@ if True:
         cur.execute("""CREATE TABLE IF NOT EXISTS notificacoes (id SERIAL PRIMARY KEY, usuario_id INTEGER, titulo TEXT, mensagem TEXT, tipo TEXT DEFAULT 'info', lida INTEGER DEFAULT 0, data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         cur.execute("""CREATE TABLE IF NOT EXISTS transacoes (id SERIAL PRIMARY KEY, agendamento_id INTEGER, tipo TEXT, valor REAL, destinatario_id INTEGER, forma_pagamento TEXT, status TEXT DEFAULT 'pendente', data_prevista_liberacao TEXT, data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         conn.commit()
-        cur.execute("DELETE FROM disponibilidade")
-        cur.execute("DELETE FROM transacoes")
-        cur.execute("DELETE FROM notificacoes")
-        cur.execute("DELETE FROM agendamentos")
-        cur.execute("DELETE FROM servicos")
-        cur.execute("DELETE FROM usuarios")
-        conn.commit()
-
         cur.execute("SELECT COUNT(*) FROM servicos")
         if cur.fetchone() == 0:
             for srv in [("Esmaltacao Simples","Esmaltacao classica",35.0,40,"maos","💅"),("Esmaltacao em Gel","Gel de longa duracao",60.0,50,"maos","✨"),("Unha Decorada","Nail art personalizada",80.0,70,"maos","🎨"),("Francesinha","Classica francesinha",45.0,50,"maos","🤍"),("Alongamento Fibra","Fibra de vidro",120.0,90,"maos","💎"),("Pedicure Completa","Hidratacao + esmaltacao",50.0,60,"pes","🦶"),("Spa dos Pes","Esfoliacao + hidratacao",70.0,75,"pes","🧖"),("Combo Maos + Pes","Esmaltacao completa",75.0,90,"combo","👑"),("Combo VIP","Gel + Spa + Hidratacao",130.0,120,"combo","🌟"),("Combo Noiva","Pacote especial noivas",200.0,150,"combo","💒")]:
