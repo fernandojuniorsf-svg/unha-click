@@ -255,9 +255,11 @@ def tela_escolher_manicure():
         st.rerun()
     manicures = query("SELECT u.*, (SELECT COUNT(*) FROM agendamentos a WHERE a.manicure_id=u.id AND a.status='concluido') as total_atend FROM usuarios u WHERE u.tipo='manicure' AND u.ativo=1 ORDER BY u.avaliacao_media DESC")
     for m in manicures:
-        inicial = str(m["nome"]).upper()[0]
+        nome_str = str(m["nome"])
+        inicial = nome_str[:1].upper()
         st.markdown('<div class="card"><div style="display:flex; align-items:center; gap:12px;"><div style="background:#C48B9F; color:white; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700;">' + inicial + '</div><div style="flex:1;"><strong style="font-size:16px;">' + str(m["nome"]) + '</strong><br><span class="estrelas">' + estrelas(m["avaliacao_media"] or 5) + '</span> <span style="color:#888; font-size:12px;">(' + str(m["total_avaliacoes"] or 0) + ' avaliacoes)</span><br><span style="color:#888; font-size:12px;">' + str(m["endereco"] or "Atende no local") + ' | ' + str(m["total_atend"]) + ' atendimentos</span></div></div><p style="color:#555; font-style:italic; font-size:12px; margin-top:8px;">' + str(m["bio"] or "") + '</p></div>', unsafe_allow_html=True)
-        primeiro = str(m["nome"]).split()[0]
+        nome_partes = str(m["nome"]).split()
+        primeiro = nome_partes.pop(0) if nome_partes else str(m["nome"])
         if st.button("Agendar com " + primeiro, key="man_" + str(m["id"]), use_container_width=True):
             ir_para("agendar", manicure_id=m["id"])
             st.rerun()
