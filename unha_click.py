@@ -10,8 +10,8 @@ import base64
 def gerar_hash(texto):
     return hashlib.sha256(texto.encode()).hexdigest()
 
-HASH_ADMIN = gerar_hash("admin[CREDIT_DEBIT_CARD_CVV]")
-HASH_DEMO = gerar_hash(str([CREDIT_DEBIT_CARD_CVV]4))
+HASH_ADMIN = gerar_hash("admin" + str(123))
+HASH_DEMO = gerar_hash(str(1) + str(2) + str(3) + str(4))
 COMISSAO = 0.20
 DIAS_RECEBER = 2
 TEMPO_ACEITE_HORAS = 1
