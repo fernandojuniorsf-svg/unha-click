@@ -81,41 +81,26 @@ st.markdown("""
     header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
-
 # =====================================================
 # 🗄️ BANCO DE DADOS - SUPABASE (PostgreSQL)
 # =====================================================
 COMISSAO = 0.20
 DIAS_RECEBER = 2
 
-@st.cache_resource
-def get_connection():
+def get_new_connection():
     return psycopg2.connect(
         host=st.secrets["database"]["host"],
         port=st.secrets["database"]["port"],
         dbname=st.secrets["database"]["dbname"],
         user=st.secrets["database"]["user"],
         password=st.secrets["database"]["password"],
-        sslmode="require"
+        sslmode="require",
+        connect_timeout=10
     )
 
-def get_db():
-    try:
-        conn = get_connection()
-        conn.autocommit = False
-        cur = conn.cursor()
-        cur.execute("SELECT 1")
-        cur.close()
-        return conn
-    except Exception:
-        st.cache_resource.clear()
-        conn = get_connection()
-        conn.autocommit = False
-        return conn
-
 def query(sql, params=None, fetch=True):
-    conn = get_db()
     try:
+        conn = get_new_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute(sql, params)
         if fetch:
@@ -124,144 +109,147 @@ def query(sql, params=None, fetch=True):
             resultado = None
         conn.commit()
         cur.close()
+        conn.close()
         return resultado
     except Exception as e:
-        conn.rollback()
-        st.error(f"Erro no banco: {e}")
+        st.error(f"❌ Erro no banco: {e}")
         return [] if fetch else None
 
 def execute(sql, params=None):
     query(sql, params, fetch=False)
 
 def execute_returning(sql, params=None):
-    conn = get_db()
     try:
+        conn = get_new_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute(sql, params)
         resultado = cur.fetchone()
         conn.commit()
         cur.close()
+        conn.close()
         return resultado
     except Exception as e:
-        conn.rollback()
-        st.error(f"Erro no banco: {e}")
+        st.error(f"❌ Erro no banco: {e}")
         return None
 
-def criar_banco():
-    conn = get_db()
-    cur = conn.cursor()
+# Flag pra criar banco só 1 vez
+if "banco_criado" not in st.session_state:
+    try:
+        conn = get_new_connection()
+        cur = conn.cursor()
 
-    cur.execute("""CREATE TABLE IF NOT EXISTS usuarios (
-        id SERIAL PRIMARY KEY,
-        nome TEXT NOT NULL,
-        telefone TEXT UNIQUE NOT NULL,
-        email TEXT,
-        senha TEXT NOT NULL,
-        tipo TEXT DEFAULT 'cliente',
-        endereco TEXT, bairro TEXT, cidade TEXT, estado TEXT DEFAULT 'SP',
-        foto TEXT, avaliacao_media REAL DEFAULT 5.0,
-        total_avaliacoes INTEGER DEFAULT 0,
-        especialidades TEXT, bio TEXT,
-        chave_pix TEXT, banco TEXT,
-        ativo INTEGER DEFAULT 1,
-        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS usuarios (
+            id SERIAL PRIMARY KEY,
+            nome TEXT NOT NULL,
+            telefone TEXT UNIQUE NOT NULL,
+            email TEXT,
+            senha TEXT NOT NULL,
+            tipo TEXT DEFAULT 'cliente',
+            endereco TEXT, bairro TEXT, cidade TEXT, estado TEXT DEFAULT 'SP',
+            foto TEXT, avaliacao_media REAL DEFAULT 5.0,
+            total_avaliacoes INTEGER DEFAULT 0,
+            especialidades TEXT, bio TEXT,
+            chave_pix TEXT, banco TEXT,
+            ativo INTEGER DEFAULT 1,
+            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
 
-    cur.execute("""CREATE TABLE IF NOT EXISTS servicos (
-        id SERIAL PRIMARY KEY,
-        nome TEXT NOT NULL, descricao TEXT,
-        preco REAL NOT NULL, duracao_min INTEGER DEFAULT 60,
-        categoria TEXT DEFAULT 'maos',
-        icone TEXT DEFAULT '💅',
-        ativo INTEGER DEFAULT 1
-    )""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS servicos (
+            id SERIAL PRIMARY KEY,
+            nome TEXT NOT NULL, descricao TEXT,
+            preco REAL NOT NULL, duracao_min INTEGER DEFAULT 60,
+            categoria TEXT DEFAULT 'maos',
+            icone TEXT DEFAULT '💅',
+            ativo INTEGER DEFAULT 1
+        )""")
 
-    cur.execute("""CREATE TABLE IF NOT EXISTS agendamentos (
-        id SERIAL PRIMARY KEY,
-        cliente_id INTEGER REFERENCES usuarios(id),
-        manicure_id INTEGER REFERENCES usuarios(id),
-        servico_id INTEGER REFERENCES servicos(id),
-        data TEXT, horario TEXT,
-        endereco_atendimento TEXT, bairro TEXT, complemento TEXT,
-        valor_total REAL, valor_manicure REAL, valor_comissao REAL,
-        cupom_codigo TEXT,
-        status TEXT DEFAULT 'pendente',
-        forma_pagamento TEXT DEFAULT 'pix',
-        observacoes TEXT,
-        data_liberacao_manicure TEXT,
-        pago INTEGER DEFAULT 0,
-        avaliacao_nota INTEGER, avaliacao_comentario TEXT,
-        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS agendamentos (
+            id SERIAL PRIMARY KEY,
+            cliente_id INTEGER REFERENCES usuarios(id),
+            manicure_id INTEGER REFERENCES usuarios(id),
+            servico_id INTEGER REFERENCES servicos(id),
+            data TEXT, horario TEXT,
+            endereco_atendimento TEXT, bairro TEXT, complemento TEXT,
+            valor_total REAL, valor_manicure REAL, valor_comissao REAL,
+            cupom_codigo TEXT,
+            status TEXT DEFAULT 'pendente',
+            forma_pagamento TEXT DEFAULT 'pix',
+            observacoes TEXT,
+            data_liberacao_manicure TEXT,
+            pago INTEGER DEFAULT 0,
+            avaliacao_nota INTEGER, avaliacao_comentario TEXT,
+            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
 
-    cur.execute("""CREATE TABLE IF NOT EXISTS disponibilidade (
-        id SERIAL PRIMARY KEY,
-        manicure_id INTEGER, dia_semana INTEGER,
-        hora_inicio TEXT DEFAULT '08:00', hora_fim TEXT DEFAULT '18:00',
-        ativo INTEGER DEFAULT 1
-    )""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS disponibilidade (
+            id SERIAL PRIMARY KEY,
+            manicure_id INTEGER, dia_semana INTEGER,
+            hora_inicio TEXT DEFAULT '08:00', hora_fim TEXT DEFAULT '18:00',
+            ativo INTEGER DEFAULT 1
+        )""")
 
-    cur.execute("""CREATE TABLE IF NOT EXISTS notificacoes (
-        id SERIAL PRIMARY KEY,
-        usuario_id INTEGER, titulo TEXT, mensagem TEXT,
-        tipo TEXT DEFAULT 'info', lida INTEGER DEFAULT 0,
-        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS notificacoes (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER, titulo TEXT, mensagem TEXT,
+            tipo TEXT DEFAULT 'info', lida INTEGER DEFAULT 0,
+            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
 
-    cur.execute("""CREATE TABLE IF NOT EXISTS transacoes (
-        id SERIAL PRIMARY KEY,
-        agendamento_id INTEGER, tipo TEXT, valor REAL,
-        destinatario_id INTEGER, forma_pagamento TEXT,
-        status TEXT DEFAULT 'pendente',
-        data_prevista_liberacao TEXT,
-        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS transacoes (
+            id SERIAL PRIMARY KEY,
+            agendamento_id INTEGER, tipo TEXT, valor REAL,
+            destinatario_id INTEGER, forma_pagamento TEXT,
+            status TEXT DEFAULT 'pendente',
+            data_prevista_liberacao TEXT,
+            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
 
-    conn.commit()
+        conn.commit()
 
-    # === DADOS INICIAIS ===
-    cur.execute("SELECT COUNT(*) FROM servicos")
-    if cur.fetchone()[0] == 0:
-        servicos = [
-            ("Esmaltação Simples", "Esmaltação clássica com acabamento perfeito", 35.00, 40, "maos", "💅"),
-            ("Esmaltação em Gel", "Gel de longa duração com brilho intenso", 60.00, 50, "maos", "✨"),
-            ("Unha Decorada", "Nail art personalizada e exclusiva", 80.00, 70, "maos", "🎨"),
-            ("Francesinha", "Clássica francesinha elegante", 45.00, 50, "maos", "🤍"),
-            ("Alongamento Fibra", "Alongamento em fibra de vidro", 120.00, 90, "maos", "💎"),
-            ("Pedicure Completa", "Hidratação + esmaltação dos pés", 50.00, 60, "pes", "🦶"),
-            ("Spa dos Pés", "Esfoliação + hidratação + esmaltação", 70.00, 75, "pes", "🧖"),
-            ("Combo Mãos + Pés", "Esmaltação completa mãos e pés", 75.00, 90, "combo", "👑"),
-            ("Combo VIP", "Gel mãos + Spa pés + Hidratação", 130.00, 120, "combo", "🌟"),
-            ("Combo Noiva", "Pacote especial para noivas", 200.00, 150, "combo", "💒"),
-        ]
-        for s in servicos:
-            cur.execute("INSERT INTO servicos (nome,descricao,preco,duracao_min,categoria,icone) VALUES (%s,%s,%s,%s,%s,%s)", s)
+        cur.execute("SELECT COUNT(*) FROM servicos")
+        if cur.fetchone() == 0:
+            servicos = [
+                ("Esmaltação Simples", "Esmaltação clássica com acabamento perfeito", 35.00, 40, "maos", "💅"),
+                ("Esmaltação em Gel", "Gel de longa duração com brilho intenso", 60.00, 50, "maos", "✨"),
+                ("Unha Decorada", "Nail art personalizada e exclusiva", 80.00, 70, "maos", "🎨"),
+                ("Francesinha", "Clássica francesinha elegante", 45.00, 50, "maos", "🤍"),
+                ("Alongamento Fibra", "Alongamento em fibra de vidro", 120.00, 90, "maos", "💎"),
+                ("Pedicure Completa", "Hidratação + esmaltação dos pés", 50.00, 60, "pes", "🦶"),
+                ("Spa dos Pés", "Esfoliação + hidratação + esmaltação", 70.00, 75, "pes", "🧖"),
+                ("Combo Mãos + Pés", "Esmaltação completa mãos e pés", 75.00, 90, "combo", "👑"),
+                ("Combo VIP", "Gel mãos + Spa pés + Hidratação", 130.00, 120, "combo", "🌟"),
+                ("Combo Noiva", "Pacote especial para noivas", 200.00, 150, "combo", "💒"),
+            ]
+            for s in servicos:
+                cur.execute("INSERT INTO servicos (nome,descricao,preco,duracao_min,categoria,icone) VALUES (%s,%s,%s,%s,%s,%s)", s)
 
-    cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
-    if cur.fetchone()[0] == 0:
-        s_admin = hashlib.sha256("admin123".encode()).hexdigest()
-        cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
-                   ("Fernando Jr", "11999999999", "fernando@unhaclick.com", s_admin, "admin"))
+        cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
+        if cur.fetchone() == 0:
+            import hashlib as _h
+            s_admin =[PIN]sha256("admin123".encode()).hexdigest()
+            cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
+                       ("Fernando Jr", "11999999999", "fernando@unhaclick.com", s_admin, "admin"))
+            s_m =[PIN]sha256("1234".encode()).hexdigest()
+            cur.execute("""INSERT INTO usuarios (nome,telefone,email,senha,tipo,especialidades,bio,chave_pix)
+                          VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                       ("Profissional Demo", "11988887777", "demo@unhaclick.com", s_m, "manicure",
+                        "Gel,Fibra,Decoração,Francesinha", "Especialista em nail art com 5 anos de experiência! 💅✨",
+                        "11988887777"))
+            mid = cur.fetchone()
+            for dia in range(0, 6):
+                cur.execute("INSERT INTO disponibilidade (manicure_id,dia_semana,hora_inicio,hora_fim) VALUES (%s,%s,%s,%s)",
+                           (mid, dia, "08:00", "18:00"))
+            s_c =[PIN]sha256("1234".encode()).hexdigest()
+            cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
+                       ("Cliente Demo", "11977776666", "cliente@demo.com", s_c, "cliente"))
 
-        s_m = hashlib.sha256("1234".encode()).hexdigest()
-        cur.execute("""INSERT INTO usuarios (nome,telefone,email,senha,tipo,especialidades,bio,chave_pix)
-                      VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-                   ("Profissional Demo", "11988887777", "demo@unhaclick.com", s_m, "manicure",
-                    "Gel,Fibra,Decoração,Francesinha", "Especialista em nail art com 5 anos de experiência! 💅✨",
-                    "11988887777"))
-        mid = cur.fetchone()[0]
-        for dia in range(0, 6):
-            cur.execute("INSERT INTO disponibilidade (manicure_id,dia_semana,hora_inicio,hora_fim) VALUES (%s,%s,%s,%s)",
-                       (mid, dia, "08:00", "18:00"))
-
-        s_c = hashlib.sha256("1234".encode()).hexdigest()
-        cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)",
-                   ("Cliente Demo", "11977776666", "cliente@demo.com", s_c, "cliente"))
-
-    conn.commit()
-    cur.close()
-
-criar_banco()
+        conn.commit()
+        cur.close()
+        conn.close()
+        st.session_state.banco_criado = True
+    except Exception as e:
+        st.error(f"❌ Erro ao conectar no banco: {e}")
+        st.stop()
 
 # =====================================================
 # 🔧 FUNÇÕES AUXILIARES
