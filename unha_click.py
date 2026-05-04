@@ -4,6 +4,9 @@ from psycopg2.extras import RealDictCursor
 import hashlib
 from datetime import datetime, date, timedelta
 
+HASH_ADMIN = hashlib.sha256(b"admin123").hexdigest()
+HASH_DEMO = hashlib.sha256(b[PASSWORD]4").hexdigest()
+
 st.set_page_config(page_title="Unha Click", page_icon="💅", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -80,24 +83,16 @@ if "banco_criado" not in st.session_state:
         cur.execute("""CREATE TABLE IF NOT EXISTS notificacoes (id SERIAL PRIMARY KEY, usuario_id INTEGER, titulo TEXT, mensagem TEXT, tipo TEXT DEFAULT 'info', lida INTEGER DEFAULT 0, data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         cur.execute("""CREATE TABLE IF NOT EXISTS transacoes (id SERIAL PRIMARY KEY, agendamento_id INTEGER, tipo TEXT, valor REAL, destinatario_id INTEGER, forma_pagamento TEXT, status TEXT DEFAULT 'pendente', data_prevista_liberacao TEXT, data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
         conn.commit()
-        cur.execute("SELECT COUNT(*) FROM servicos")
+                cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
         if cur.fetchone() == 0:
-            for srv in [("Esmaltacao Simples","Esmaltacao classica",35.0,40,"maos","💅"),("Esmaltacao em Gel","Gel de longa duracao",60.0,50,"maos","✨"),("Unha Decorada","Nail art personalizada",80.0,70,"maos","🎨"),("Francesinha","Classica francesinha",45.0,50,"maos","🤍"),("Alongamento Fibra","Fibra de vidro",120.0,90,"maos","💎"),("Pedicure Completa","Hidratacao + esmaltacao",50.0,60,"pes","🦶"),("Spa dos Pes","Esfoliacao + hidratacao",70.0,75,"pes","🧖"),("Combo Maos + Pes","Esmaltacao completa",75.0,90,"combo","👑"),("Combo VIP","Gel + Spa + Hidratacao",130.0,120,"combo","🌟"),("Combo Noiva","Pacote especial noivas",200.0,150,"combo","💒")]:
-                cur.execute("INSERT INTO servicos (nome,descricao,preco,duracao_min,categoria,icone) VALUES (%s,%s,%s,%s,%s,%s)", srv)
-        cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
-        if cur.fetchone() == 0:
-                    cur.execute("SELECT COUNT(*) FROM usuarios WHERE tipo='admin'")
-        if cur.fetchone() == 0:
-            senha_admin =[PASSWORD]6("admin123".encode()).hexdigest()
+            senha_admin = HASH_ADMIN
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Fernando Jr","11999999999","fernando@unhaclick.com",senha_admin,"admin"))
-            senha_mani =click"
+            senha_mani = HASH_DEMO
             cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo,especialidades,bio,chave_pix) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id", ("Profissional Demo","11988887777","demo@unhaclick.com",senha_mani,"manicure","Gel,Fibra,Decoracao,Francesinha","Especialista em nail art com 5 anos de experiencia!","11988887777"))
             mid = cur.fetchone()
             for dia in range(0, 6):
                 cur.execute("INSERT INTO disponibilidade (manicure_id,dia_semana,hora_inicio,hora_fim) VALUES (%s,%s,%s,%s)", (mid, dia, "08:00", "18:00"))
-            senha_cli =[PASSWORD]6([PASSWORD]4".encode()).hexdigest()
-            cur.execute("INSERT INTO usuarios (nome,telefone,email,senha,tipo) VALUES (%s,%s,%s,%s,%s)", ("Cliente Demo","11977776666","cliente@demo.com",senha_cli,"cliente"))
-
+            senha_cli = HASH_DEMO
 
 def badge_html(status):
     nomes = {"pendente": "Pendente", "confirmado": "Confirmado", "concluido": "Concluido", "cancelado": "Cancelado"}
