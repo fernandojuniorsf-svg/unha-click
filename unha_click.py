@@ -153,7 +153,7 @@ def tela_login():
                 s = gerar_hash(senha)
                 resultado = query("SELECT * FROM usuarios WHERE telefone=%s AND senha=%s AND ativo=1", (tel, s))
                 if resultado:
-                    user = resultado
+                    user = resultado[0]
                     st.session_state.user_id = user["id"]
                     st.session_state.user_nome = user["nome"]
                     st.session_state.user_tipo = user["tipo"]
@@ -269,8 +269,8 @@ def tela_agendar():
         ir_para("cliente_home")
         st.rerun()
         return
-    servico = servico_list
-    manicure = manicure_list
+    servico = servico_list[0]
+    manicure = manicure_list[0]
     st.markdown('<div class="header-unha"><h1>Agendar</h1><p>' + str(servico["icone"]) + ' ' + str(servico["nome"]) + ' com ' + str(manicure["nome"]) + '</p></div>', unsafe_allow_html=True)
     if st.button("Voltar"):
         ir_para("escolher_manicure")
@@ -373,7 +373,7 @@ def tela_confirmacao():
         ir_para("cliente_home")
         st.rerun()
         return
-    ag = resultado
+    ag = resultado[0]
     st.markdown('<div style="text-align:center; padding:40px 0;"><div style="font-size:70px;">✅</div><h2 style="color:#4CAF50;">Agendamento Confirmado!</h2><p style="color:#888;">A profissional recebera a notificacao</p></div>', unsafe_allow_html=True)
     st.markdown('<div class="card-gold"><h4>' + str(ag["icone"]) + ' ' + str(ag["sn"]) + '</h4><p><strong>Profissional:</strong> ' + str(ag["mn"]) + '<br><strong>Data:</strong> ' + str(ag["data"]) + '<br><strong>Horario:</strong> ' + str(ag["horario"]) + '<br><strong>Local:</strong> ' + str(ag["endereco_atendimento"]) + '<br><strong>Pagamento:</strong> ' + forma_pg_nome(ag["forma_pagamento"]) + '</p><hr><h3 style="color:#B8860B;">Total: R$ ' + f'{ag["valor_total"]:.2f}' + '</h3></div>', unsafe_allow_html=True)
     if st.button("Voltar ao Inicio", use_container_width=True):
@@ -403,7 +403,7 @@ def tela_avaliar():
         ir_para("cliente_home")
         st.rerun()
         return
-    ag = resultado
+    ag = resultado[0]
     st.markdown('<div class="header-unha"><h1>Avaliar</h1><p>' + str(ag["sn"]) + ' com ' + str(ag["mn"]) + '</p></div>', unsafe_allow_html=True)
     if st.button("Voltar"):
         ir_para("meus_agendamentos")
@@ -430,7 +430,7 @@ def tela_perfil():
         ir_para("cliente_home")
         st.rerun()
         return
-    user = resultado
+    user = resultado[0]
     st.markdown('<div class="header-unha"><h1>Meu Perfil</h1></div>', unsafe_allow_html=True)
     if st.button("Voltar"):
         ir_para("cliente_home")
